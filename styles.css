@@ -31,7 +31,7 @@ html, body {
   overflow-x: hidden;
 }
 
-/* Ambient Floating Aurora Mesh Background */
+/* UPGRADE 1: Ambient Floating Aurora Mesh Background */
 body::before {
   content: "";
   position: fixed;
@@ -58,6 +58,7 @@ body {
 
 button, select, textarea { font: inherit; }
 
+/* Keep structural compatibility while ensuring smooth display */
 .topbar,
 .controls,
 .side-column {
@@ -151,19 +152,9 @@ button, select, textarea { font: inherit; }
   transition: filter 0.4s ease, transform 0.4s ease;
 }
 
-/* Subtle Outer Glass Rim Light around the Board */
-.board::after {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25);
-  pointer-events: none;
-  z-index: 10;
-}
+/* (Removed the decorative "board::after" glass rim here to ensure absolute edge-to-edge integrity without optical borders) */
 
-/* Reactive Board Alarm Glow when in Check */
+/* UPGRADE 3: Reactive Board Alarm Glow when in Check (Zero JS needed) */
 .board:has(.square.check) {
   filter: drop-shadow(0 20px 45px rgba(255, 40, 40, 0.45));
 }
@@ -175,7 +166,8 @@ button, select, textarea { font: inherit; }
   height: 100%;
   display: block;
   pointer-events: none;
-  /* FORCES the board image to extend exactly edge-to-edge covering the container completely */
+  
+  /* Forces the board art to aggressively map to the exact edges of the container */
   object-fit: fill; 
   margin: 0;
   padding: 0;
@@ -188,10 +180,11 @@ button, select, textarea { font: inherit; }
   height: 100%;
   display: grid;
   
-  /* Strictly mathematically divides the board into exactly 8 even columns/rows (12.5% each). 
-     This eliminates the sub-pixel rendering gaps sometimes caused by minmax(0, 1fr) */
-  grid-template-columns: repeat(8, 12.5%);
-  grid-template-rows: repeat(8, 12.5%);
+  /* Using 1fr mathematically forces the grid to consume 100% of the bounding box without rounding gaps */
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  align-content: stretch;
+  justify-content: stretch;
 
   gap: 0;
   margin: 0;
@@ -206,8 +199,10 @@ button, select, textarea { font: inherit; }
   position: relative;
   width: 100%;
   height: 100%;
-  min-width: 0;
-  min-height: 0;
+  
+  /* Strict bounding enforcement prevents grid cell collapse */
+  min-width: 100%;
+  min-height: 100%;
 
   border: 0;
   padding: 0;
@@ -218,6 +213,7 @@ button, select, textarea { font: inherit; }
   cursor: pointer;
   overflow: visible;
 
+  /* Eliminate browser-specific button/content alignment surprises */
   vertical-align: top;
   line-height: 0;
   font-size: 0;
@@ -225,7 +221,7 @@ button, select, textarea { font: inherit; }
   transition: background-color 0.2s ease, transform 0.1s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Tactile App-Style Haptic Press Feedback */
+/* UPGRADE 4: Tactile App-Style Haptic Press Feedback */
 .square:active {
   transform: scale(0.94);
 }
@@ -262,7 +258,7 @@ button, select, textarea { font: inherit; }
   box-shadow: 0 0 16px #ffffff;
 }
 
-/* Target Lock Radar Reticle for Captures */
+/* UPGRADE 5: Target Lock Radar Reticle for Captures */
 .square.capture::before {
   content: "";
   position: absolute;
@@ -301,11 +297,12 @@ button, select, textarea { font: inherit; }
 .piece {
   position: absolute;
 
-  /* The layout box strictly equals the size of the 12.5% square container */
+  /* Exact square-sized positioning box */
   inset: 0;
   width: 100%;
   height: 100%;
 
+  /* Make all SVG/image pieces use the same square geometry */
   margin: 0;
   padding: 0;
   display: block;
@@ -317,11 +314,12 @@ button, select, textarea { font: inherit; }
   -webkit-user-select: none;
   -webkit-user-drag: none;
 
+  /* 
+     Keep the visual "feet/base" anchored to the square.
+     CSS Transforms do NOT alter the size or flow of the DOM box, 
+     ensuring the scale changes visually without breaking grid alignment.
+  */
   transform-origin: center bottom;
-  
-  /* SCALING HAPPENS HERE:
-     CSS Transforms do NOT affect DOM flow or layout sizing. 
-     The bounding box remains exactly aligned to the board edge regardless of the piece scale */
   transform: scale(var(--piece-scale));
 
   overflow: visible;
@@ -329,24 +327,13 @@ button, select, textarea { font: inherit; }
 
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
 
+  /* Prevent browser interpolation/layout differences */
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   will-change: transform, filter, opacity;
 }
 
-.board-grid,
-.square {
-  min-width: 0;
-  min-height: 0;
-}
-
-.square {
-  display: block;
-  box-sizing: border-box;
-  overflow: visible;
-}
-
-/* Ensure absolute compliance to edge constraints for the bounding box */
+/* All normal piece images/SVGs inherit the same rendering box */
 .square > .piece {
   left: 0;
   right: 0;
@@ -396,34 +383,76 @@ button, select, textarea { font: inherit; }
 }
 
 @keyframes pieceMoving {
-  0% { transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0); }
-  50% { transform: translate3d(0, -14%, 0) scale(calc(var(--piece-scale) * 1.14)) rotate(-2deg); filter: drop-shadow(0 16px 20px rgba(0, 0, 0, 0.4)); }
-  100% { transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0); }
+  0% {
+    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
+  }
+  50% {
+    transform: translate3d(0, -14%, 0) scale(calc(var(--piece-scale) * 1.14)) rotate(-2deg);
+    filter: drop-shadow(0 16px 20px rgba(0, 0, 0, 0.4));
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
+  }
 }
 
 @keyframes pieceAttacking {
-  0% { transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0); }
-  40% { transform: translate3d(0, -20%, 0) scale(calc(var(--piece-scale) * 1.24)) rotate(5deg); filter: drop-shadow(0 20px 26px rgba(255, 80, 80, 0.45)); }
-  100% { transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0); }
+  0% {
+    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
+  }
+  40% {
+    transform: translate3d(0, -20%, 0) scale(calc(var(--piece-scale) * 1.24)) rotate(5deg);
+    filter: drop-shadow(0 20px 26px rgba(255, 80, 80, 0.45));
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
+  }
 }
 
 @keyframes pieceCelebrate {
-  0% { transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0); }
-  25% { transform: translate3d(0, -15%, 0) scale(calc(var(--piece-scale) * 1.15)) rotate(-6deg); }
-  50% { transform: translate3d(0, -5%, 0) scale(calc(var(--piece-scale) * 1.15)) rotate(6deg); }
-  75% { transform: translate3d(0, -10%, 0) scale(calc(var(--piece-scale) * 1.05)) rotate(-3deg); }
-  100% { transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0); }
+  0% {
+    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
+  }
+  25% {
+    transform: translate3d(0, -15%, 0) scale(calc(var(--piece-scale) * 1.15)) rotate(-6deg);
+  }
+  50% {
+    transform: translate3d(0, -5%, 0) scale(calc(var(--piece-scale) * 1.15)) rotate(6deg);
+  }
+  75% {
+    transform: translate3d(0, -10%, 0) scale(calc(var(--piece-scale) * 1.05)) rotate(-3deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
+  }
 }
 
 @keyframes pieceDefeated {
-  0% { opacity: 1; transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0); filter: brightness(1); }
-  35% { opacity: 0.85; transform: translate3d(0, 0, 0) scale(calc(var(--piece-scale) * 1.12)) rotate(-10deg); filter: brightness(1.8) drop-shadow(0 0 18px rgba(255, 50, 50, 0.85)); }
-  100% { opacity: 0; transform: translate3d(0, 0, 0) scale(calc(var(--piece-scale) * 0.35)) rotate(45deg); filter: brightness(0.1); }
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
+    filter: brightness(1);
+  }
+  35% {
+    opacity: 0.85;
+    transform: translate3d(0, 0, 0) scale(calc(var(--piece-scale) * 1.12)) rotate(-10deg);
+    filter: brightness(1.8) drop-shadow(0 0 18px rgba(255, 50, 50, 0.85));
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(calc(var(--piece-scale) * 0.35)) rotate(45deg);
+    filter: brightness(0.1);
+  }
 }
 
 @keyframes pieceSecret {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(var(--piece-scale)); filter: brightness(1) drop-shadow(0 4px 8px rgba(0,0,0,0.4)); }
-  50% { transform: translate3d(0, 0, 0) scale(calc(var(--piece-scale) * 1.08)); filter: brightness(1.6) drop-shadow(0 0 22px var(--glow-primary)); }
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(var(--piece-scale));
+    filter: brightness(1) drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+  }
+  50% {
+    transform: translate3d(0, 0, 0) scale(calc(var(--piece-scale) * 1.08));
+    filter: brightness(1.6) drop-shadow(0 0 22px var(--glow-primary));
+  }
 }
 
 /* Glassmorphism Pawn Promotion Modal */
@@ -475,6 +504,8 @@ button, select, textarea { font: inherit; }
   transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* Responsive geometry safeguard:
+   The board remains a true square and never gains browser-default gaps. */
 @supports (height: 100dvh) {
   .board {
     width: min(100vw, 100dvh);
@@ -482,7 +513,7 @@ button, select, textarea { font: inherit; }
   }
 }
 
-/* Dynamic Light Sheen Reflection on Hover */
+/* UPGRADE 6: Dynamic Light Sheen Reflection on Hover */
 .promotion-choice::after {
   content: "";
   position: absolute;
@@ -501,7 +532,9 @@ button, select, textarea { font: inherit; }
   pointer-events: none;
 }
 
-.promotion-choice:hover::after { transform: translateX(100%); }
+.promotion-choice:hover::after {
+  transform: translateX(100%);
+}
 
 .promotion-choice:hover {
   background: rgba(255, 255, 255, 0.16);
