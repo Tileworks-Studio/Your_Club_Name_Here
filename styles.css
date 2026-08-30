@@ -1,6 +1,6 @@
 :root {
   --board-size: min(100vw, 100dvh);
-  --piece-scale: 1.57;
+  --piece-scale: 1.22;
   
   /* Modern Theme Color Variables */
   --glow-primary: rgba(180, 107, 255, 0.8);
