@@ -1,9 +1,6 @@
 :root {
   --board-size: min(100vw, 100dvh);
-  --piece-scale: 1.04;
-  
-  /* NEW: Use this to manually push pieces down if your image files have transparent space at the bottom */
-  --piece-y-offset: 6%; 
+  --piece-scale: 1.03;
   
   /* Modern Theme Color Variables */
   --glow-primary: rgba(180, 107, 255, 0.8);
@@ -61,6 +58,7 @@ body {
 
 button, select, textarea { font: inherit; }
 
+/* Keep structural compatibility while ensuring smooth display */
 .topbar,
 .controls,
 .side-column {
@@ -130,19 +128,26 @@ button, select, textarea { font: inherit; }
 .board {
   position: relative;
   flex: 0 0 auto;
+
+  /* One authoritative square. The grid and every piece inherit from this. */
   width: min(100vw, 100dvh);
   height: min(100vw, 100dvh);
   aspect-ratio: 1 / 1;
+
   max-width: 100vw;
   max-height: 100dvh;
+
   margin: 0 auto;
   padding: 0;
   border: 0;
+
   overflow: visible;
   box-sizing: border-box;
+
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
+
   filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.75));
   transition: filter 0.4s ease, transform 0.4s ease;
 }
@@ -159,7 +164,7 @@ button, select, textarea { font: inherit; }
   z-index: 10;
 }
 
-/* UPGRADE 3: Reactive Board Alarm Glow when in Check */
+/* UPGRADE 3: Reactive Board Alarm Glow when in Check (Zero JS needed) */
 .board:has(.square.check) {
   filter: drop-shadow(0 20px 45px rgba(255, 40, 40, 0.45));
 }
@@ -176,35 +181,45 @@ button, select, textarea { font: inherit; }
 .board-grid {
   position: absolute;
   inset: 0;
+
   width: 100%;
   height: 100%;
+
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
   grid-template-rows: repeat(8, minmax(0, 1fr));
+
   gap: 0;
   margin: 0;
-  padding: 0; /* Add e.g., 2% here if the grid misaligns with background art borders */
+  padding: 0;
   border: 0;
+
   box-sizing: border-box;
   overflow: visible;
 }
 
 .square {
   position: relative;
+
   width: 100%;
   height: 100%;
   min-width: 0;
   min-height: 0;
+
   border: 0;
   padding: 0;
   margin: 0;
+
   box-sizing: border-box;
   background: transparent;
   cursor: pointer;
   overflow: visible;
+
+  /* Eliminate browser-specific button/content alignment surprises */
   vertical-align: top;
   line-height: 0;
   font-size: 0;
+
   transition: background-color 0.2s ease, transform 0.1s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -279,38 +294,55 @@ button, select, textarea { font: inherit; }
 }
 
 /* ============================================================
-   PIECE ALIGNMENT SYSTEM WITH OVERRIDE
+   PIECE ALIGNMENT SYSTEM
+   ============================================================
+   The board uses a strict 8x8 grid. Every piece SVG now occupies
+   the complete square that contains it, instead of using inset
+   offsets. This keeps the piece coordinate system locked to the
+   square at every viewport size.
+
+   IMPORTANT:
+   - The piece box is exactly 100% x 100% of its square.
+   - SVG content is bottom-anchored.
+   - Scaling happens from the bottom-center of that square.
+   - No hard-coded pixel offsets are used for normal positioning.
    ============================================================ */
 .piece {
   position: absolute;
+
+  /* Exact square-sized positioning box */
   inset: 0;
   width: 100%;
   height: 100%;
+
+  /* Make all SVG/image pieces use the same square geometry */
   margin: 0;
   padding: 0;
   display: block;
   object-fit: contain;
-  object-position: center;
+  object-position: center bottom;
 
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
   -webkit-user-drag: none;
 
-  /* Ensures expansion triggers equally from the center */
-  transform-origin: center;
-  
-  /* Translates the piece to compensate for transparent SVG padding, then scales it */
-  transform: translateY(var(--piece-y-offset)) scale(var(--piece-scale));
+  /* Keep the visual "feet/base" anchored to the square */
+  transform-origin: center bottom;
+  transform: scale(var(--piece-scale));
 
   overflow: visible;
   border: 0;
+
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
+
+  /* Prevent browser interpolation/layout differences */
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   will-change: transform, filter, opacity;
 }
 
+/* Keep square geometry deterministic even with different content */
 .board-grid,
 .square {
   min-width: 0;
@@ -328,6 +360,7 @@ button, select, textarea { font: inherit; }
   overflow: visible;
 }
 
+/* All normal piece images/SVGs inherit the same rendering box */
 .square > .piece {
   left: 0;
   right: 0;
@@ -339,7 +372,7 @@ button, select, textarea { font: inherit; }
   transition: none !important;
 }
 
-/* Dynamic Animations Synced to the Y-Offset Variable */
+/* Dynamic Animations with Spring Physics */
 .piece.state-moving { animation: pieceMoving 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .piece.state-attacking { animation: pieceAttacking 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
 .piece.state-celebrate { animation: pieceCelebrate 1.10s ease-in-out both; }
@@ -376,76 +409,75 @@ button, select, textarea { font: inherit; }
   to { box-shadow: inset 0 0 0 min(6px, 1vw) rgba(255, 80, 80, 0.95), 0 0 28px rgba(255, 50, 50, 0.75); }
 }
 
-/* Core Animations Recalculated for Y-Offset Anchoring */
 @keyframes pieceMoving {
   0% {
-    transform: translateY(var(--piece-y-offset)) scale(var(--piece-scale)) rotate(0);
+    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
   }
   50% {
-    transform: translateY(calc(var(--piece-y-offset) - 10%)) scale(calc(var(--piece-scale) * 1.14)) rotate(-2deg);
+    transform: translate3d(0, -14%, 0) scale(calc(var(--piece-scale) * 1.14)) rotate(-2deg);
     filter: drop-shadow(0 16px 20px rgba(0, 0, 0, 0.4));
   }
   100% {
-    transform: translateY(var(--piece-y-offset)) scale(var(--piece-scale)) rotate(0);
+    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
   }
 }
 
 @keyframes pieceAttacking {
   0% {
-    transform: translateY(var(--piece-y-offset)) scale(var(--piece-scale)) rotate(0);
+    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
   }
   40% {
-    transform: translateY(calc(var(--piece-y-offset) - 12%)) scale(calc(var(--piece-scale) * 1.24)) rotate(5deg);
+    transform: translate3d(0, -20%, 0) scale(calc(var(--piece-scale) * 1.24)) rotate(5deg);
     filter: drop-shadow(0 20px 26px rgba(255, 80, 80, 0.45));
   }
   100% {
-    transform: translateY(var(--piece-y-offset)) scale(var(--piece-scale)) rotate(0);
+    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
   }
 }
 
 @keyframes pieceCelebrate {
   0% {
-    transform: translateY(var(--piece-y-offset)) scale(var(--piece-scale)) rotate(0);
+    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
   }
   25% {
-    transform: translateY(calc(var(--piece-y-offset) - 8%)) scale(calc(var(--piece-scale) * 1.15)) rotate(-6deg);
+    transform: translate3d(0, -15%, 0) scale(calc(var(--piece-scale) * 1.15)) rotate(-6deg);
   }
   50% {
-    transform: translateY(calc(var(--piece-y-offset) - 2%)) scale(calc(var(--piece-scale) * 1.15)) rotate(6deg);
+    transform: translate3d(0, -5%, 0) scale(calc(var(--piece-scale) * 1.15)) rotate(6deg);
   }
   75% {
-    transform: translateY(calc(var(--piece-y-offset) - 5%)) scale(calc(var(--piece-scale) * 1.05)) rotate(-3deg);
+    transform: translate3d(0, -10%, 0) scale(calc(var(--piece-scale) * 1.05)) rotate(-3deg);
   }
   100% {
-    transform: translateY(var(--piece-y-offset)) scale(var(--piece-scale)) rotate(0);
+    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
   }
 }
 
 @keyframes pieceDefeated {
   0% {
     opacity: 1;
-    transform: translateY(var(--piece-y-offset)) scale(var(--piece-scale)) rotate(0);
+    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
     filter: brightness(1);
   }
   35% {
     opacity: 0.85;
-    transform: translateY(var(--piece-y-offset)) scale(calc(var(--piece-scale) * 1.12)) rotate(-10deg);
+    transform: translate3d(0, 0, 0) scale(calc(var(--piece-scale) * 1.12)) rotate(-10deg);
     filter: brightness(1.8) drop-shadow(0 0 18px rgba(255, 50, 50, 0.85));
   }
   100% {
     opacity: 0;
-    transform: translateY(var(--piece-y-offset)) scale(calc(var(--piece-scale) * 0.35)) rotate(45deg);
+    transform: translate3d(0, 0, 0) scale(calc(var(--piece-scale) * 0.35)) rotate(45deg);
     filter: brightness(0.1);
   }
 }
 
 @keyframes pieceSecret {
   0%, 100% {
-    transform: translateY(var(--piece-y-offset)) scale(var(--piece-scale));
+    transform: translate3d(0, 0, 0) scale(var(--piece-scale));
     filter: brightness(1) drop-shadow(0 4px 8px rgba(0,0,0,0.4));
   }
   50% {
-    transform: translateY(var(--piece-y-offset)) scale(calc(var(--piece-scale) * 1.08));
+    transform: translate3d(0, 0, 0) scale(calc(var(--piece-scale) * 1.08));
     filter: brightness(1.6) drop-shadow(0 0 22px var(--glow-primary));
   }
 }
@@ -499,6 +531,8 @@ button, select, textarea { font: inherit; }
   transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* Responsive geometry safeguard:
+   The board remains a true square and never gains browser-default gaps. */
 @supports (height: 100dvh) {
   .board {
     width: min(100vw, 100dvh);
