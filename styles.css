@@ -175,7 +175,7 @@ button, select, textarea { font: inherit; }
 
 .board-grid {
   position: absolute;
-  inset: 1.5%; /* Adjust this number up or down until the red lines match perfectly */
+  inset: 0%; /* Adjust this number up or down until the red lines match perfectly */
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
