@@ -2,6 +2,9 @@
   --board-size: min(100vw, 100dvh);
   --piece-scale: 1.04;
   
+  /* NEW: Use this to manually push pieces down if your image files have transparent space at the bottom */
+  --piece-y-offset: 6%; 
+  
   /* Modern Theme Color Variables */
   --glow-primary: rgba(180, 107, 255, 0.8);
   --glow-check: rgba(255, 75, 75, 0.85);
@@ -58,7 +61,6 @@ body {
 
 button, select, textarea { font: inherit; }
 
-/* Keep structural compatibility while ensuring smooth display */
 .topbar,
 .controls,
 .side-column {
@@ -157,7 +159,7 @@ button, select, textarea { font: inherit; }
   z-index: 10;
 }
 
-/* UPGRADE 3: Reactive Board Alarm Glow when in Check (Zero JS needed) */
+/* UPGRADE 3: Reactive Board Alarm Glow when in Check */
 .board:has(.square.check) {
   filter: drop-shadow(0 20px 45px rgba(255, 40, 40, 0.45));
 }
@@ -181,7 +183,7 @@ button, select, textarea { font: inherit; }
   grid-template-rows: repeat(8, minmax(0, 1fr));
   gap: 0;
   margin: 0;
-  padding: 0;
+  padding: 0; /* Add e.g., 2% here if the grid misaligns with background art borders */
   border: 0;
   box-sizing: border-box;
   overflow: visible;
@@ -277,7 +279,7 @@ button, select, textarea { font: inherit; }
 }
 
 /* ============================================================
-   PIECE ALIGNMENT SYSTEM
+   PIECE ALIGNMENT SYSTEM WITH OVERRIDE
    ============================================================ */
 .piece {
   position: absolute;
@@ -288,8 +290,6 @@ button, select, textarea { font: inherit; }
   padding: 0;
   display: block;
   object-fit: contain;
-
-  /* Centered perfectly to accommodate scale changes */
   object-position: center;
 
   pointer-events: none;
@@ -297,9 +297,11 @@ button, select, textarea { font: inherit; }
   -webkit-user-select: none;
   -webkit-user-drag: none;
 
-  /* Scaled from center to prevent vertical shifting */
+  /* Ensures expansion triggers equally from the center */
   transform-origin: center;
-  transform: scale(var(--piece-scale));
+  
+  /* Translates the piece to compensate for transparent SVG padding, then scales it */
+  transform: translateY(var(--piece-y-offset)) scale(var(--piece-scale));
 
   overflow: visible;
   border: 0;
@@ -337,7 +339,7 @@ button, select, textarea { font: inherit; }
   transition: none !important;
 }
 
-/* Dynamic Animations with Spring Physics */
+/* Dynamic Animations Synced to the Y-Offset Variable */
 .piece.state-moving { animation: pieceMoving 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .piece.state-attacking { animation: pieceAttacking 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
 .piece.state-celebrate { animation: pieceCelebrate 1.10s ease-in-out both; }
@@ -374,76 +376,76 @@ button, select, textarea { font: inherit; }
   to { box-shadow: inset 0 0 0 min(6px, 1vw) rgba(255, 80, 80, 0.95), 0 0 28px rgba(255, 50, 50, 0.75); }
 }
 
-/* Re-balanced Y-translations to account for new center pivot point */
+/* Core Animations Recalculated for Y-Offset Anchoring */
 @keyframes pieceMoving {
   0% {
-    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
+    transform: translateY(var(--piece-y-offset)) scale(var(--piece-scale)) rotate(0);
   }
   50% {
-    transform: translate3d(0, -10%, 0) scale(calc(var(--piece-scale) * 1.14)) rotate(-2deg);
+    transform: translateY(calc(var(--piece-y-offset) - 10%)) scale(calc(var(--piece-scale) * 1.14)) rotate(-2deg);
     filter: drop-shadow(0 16px 20px rgba(0, 0, 0, 0.4));
   }
   100% {
-    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
+    transform: translateY(var(--piece-y-offset)) scale(var(--piece-scale)) rotate(0);
   }
 }
 
 @keyframes pieceAttacking {
   0% {
-    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
+    transform: translateY(var(--piece-y-offset)) scale(var(--piece-scale)) rotate(0);
   }
   40% {
-    transform: translate3d(0, -12%, 0) scale(calc(var(--piece-scale) * 1.24)) rotate(5deg);
+    transform: translateY(calc(var(--piece-y-offset) - 12%)) scale(calc(var(--piece-scale) * 1.24)) rotate(5deg);
     filter: drop-shadow(0 20px 26px rgba(255, 80, 80, 0.45));
   }
   100% {
-    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
+    transform: translateY(var(--piece-y-offset)) scale(var(--piece-scale)) rotate(0);
   }
 }
 
 @keyframes pieceCelebrate {
   0% {
-    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
+    transform: translateY(var(--piece-y-offset)) scale(var(--piece-scale)) rotate(0);
   }
   25% {
-    transform: translate3d(0, -8%, 0) scale(calc(var(--piece-scale) * 1.15)) rotate(-6deg);
+    transform: translateY(calc(var(--piece-y-offset) - 8%)) scale(calc(var(--piece-scale) * 1.15)) rotate(-6deg);
   }
   50% {
-    transform: translate3d(0, -2%, 0) scale(calc(var(--piece-scale) * 1.15)) rotate(6deg);
+    transform: translateY(calc(var(--piece-y-offset) - 2%)) scale(calc(var(--piece-scale) * 1.15)) rotate(6deg);
   }
   75% {
-    transform: translate3d(0, -5%, 0) scale(calc(var(--piece-scale) * 1.05)) rotate(-3deg);
+    transform: translateY(calc(var(--piece-y-offset) - 5%)) scale(calc(var(--piece-scale) * 1.05)) rotate(-3deg);
   }
   100% {
-    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
+    transform: translateY(var(--piece-y-offset)) scale(var(--piece-scale)) rotate(0);
   }
 }
 
 @keyframes pieceDefeated {
   0% {
     opacity: 1;
-    transform: translate3d(0, 0, 0) scale(var(--piece-scale)) rotate(0);
+    transform: translateY(var(--piece-y-offset)) scale(var(--piece-scale)) rotate(0);
     filter: brightness(1);
   }
   35% {
     opacity: 0.85;
-    transform: translate3d(0, 0, 0) scale(calc(var(--piece-scale) * 1.12)) rotate(-10deg);
+    transform: translateY(var(--piece-y-offset)) scale(calc(var(--piece-scale) * 1.12)) rotate(-10deg);
     filter: brightness(1.8) drop-shadow(0 0 18px rgba(255, 50, 50, 0.85));
   }
   100% {
     opacity: 0;
-    transform: translate3d(0, 0, 0) scale(calc(var(--piece-scale) * 0.35)) rotate(45deg);
+    transform: translateY(var(--piece-y-offset)) scale(calc(var(--piece-scale) * 0.35)) rotate(45deg);
     filter: brightness(0.1);
   }
 }
 
 @keyframes pieceSecret {
   0%, 100% {
-    transform: translate3d(0, 0, 0) scale(var(--piece-scale));
+    transform: translateY(var(--piece-y-offset)) scale(var(--piece-scale));
     filter: brightness(1) drop-shadow(0 4px 8px rgba(0,0,0,0.4));
   }
   50% {
-    transform: translate3d(0, 0, 0) scale(calc(var(--piece-scale) * 1.08));
+    transform: translateY(var(--piece-y-offset)) scale(calc(var(--piece-scale) * 1.08));
     filter: brightness(1.6) drop-shadow(0 0 22px var(--glow-primary));
   }
 }
