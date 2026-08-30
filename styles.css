@@ -296,38 +296,23 @@ button, select, textarea { font: inherit; }
    ============================================================ */
 .piece {
   position: absolute;
-
-  /* Exact square-sized positioning box */
   inset: 0;
   width: 100%;
   height: 100%;
-
-  /* Make all SVG/image pieces use the same square geometry */
   margin: 0;
   padding: 0;
   display: block;
   object-fit: contain;
-  object-position: center bottom;
-
+  object-position: center center; /* Updated from center bottom */
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
   -webkit-user-drag: none;
-
-  /* 
-     Keep the visual "feet/base" anchored to the square.
-     CSS Transforms do NOT alter the size or flow of the DOM box, 
-     ensuring the scale changes visually without breaking grid alignment.
-  */
   transform-origin: center bottom;
   transform: scale(var(--piece-scale));
-
   overflow: visible;
   border: 0;
-
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
-
-  /* Prevent browser interpolation/layout differences */
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   will-change: transform, filter, opacity;
