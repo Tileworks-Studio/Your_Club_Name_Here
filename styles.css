@@ -204,9 +204,10 @@ button, select, textarea { font: inherit; }
   min-width: 100%;
   min-height: 100%;
 
-  border: 0;
+  border: 1px solid red;
   padding: 0;
   margin: 0;
+  
 
   box-sizing: border-box;
   background: transparent;
@@ -223,7 +224,7 @@ button, select, textarea { font: inherit; }
 
 /* UPGRADE 4: Tactile App-Style Haptic Press Feedback */
 .square:active {
-  transform: scale(0.94);
+  transform: scale(0.95);
 }
 
 /* Modernized Square Highlights & Dynamic Indicators */
