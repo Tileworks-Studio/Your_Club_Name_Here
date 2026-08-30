@@ -1,6 +1,6 @@
 :root {
   --board-size: min(100vw, 100dvh);
-  --piece-scale: 1.03;
+  --piece-scale: 1.50;
   
   /* Modern Theme Color Variables */
   --glow-primary: rgba(180, 107, 255, 0.8);
@@ -198,7 +198,7 @@ button, select, textarea { font: inherit; }
   min-width: 100%;
   min-height: 100%;
 
-  border: 1px solid red;
+  border: 0;
   padding: 0;
   margin: 0;
   
