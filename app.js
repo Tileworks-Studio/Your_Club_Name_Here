@@ -21,48 +21,7 @@ const CONFIG = {
   defeatedHoldMs: 700,
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-  const board = document.querySelector('.board');
-  if (!board) return;
 
-  // 1. Separate Dictionaries for White (Yours) and Black (Theirs)
-  const piecePhrases = {
-    white: {
-      'king': "I'm the King! Protect me at all costs!",
-      'queen': "I'm the Queen. I rule this board.",
-      'rook': "Rook. Holding the line.",
-      'bishop': "Bishop. Slicing through the light and dark.",
-      'knight': "Knight! *Nei-ei-eigh*",
-      'pawn': "Pawn, marching forward!",
-      'default': "I am ready to fight for!"
-    },
-    black: {
-      'king': "I am the King. You cannot defeat me.",
-      'queen': "Queen. Fear my wrath.",
-      'rook': "Rook. An unstoppable force.",
-      'bishop': "Bishop. Watching from the shadows.",
-      'knight': "Knight. The shadows move with me.",
-      'pawn': "Pawn. We are legion.",
-      'default': "The forces are ready!"
-    }
-  };
-
-  // Variable to track time between clicks for double-tap logic
-  let lastTapTime = 0;
-
-  // 2. Listen for clicks, but calculate if it's a double tap/click
-  board.addEventListener('click', (e) => {
-    const currentTime = new Date().getTime();
-    const tapLength = currentTime - lastTapTime;
-
-    // If the time between clicks is less than 400ms, it's a double-click/tap!
-    if (tapLength > 0 && tapLength < 400) {
-      triggerSpeechBubble(e);
-      lastTapTime = 0; // Reset so a third rapid click doesn't trigger it again
-    } else {
-      lastTapTime = currentTime;
-    }
-  });
 
   // 3. The function that actually creates the bubble
   function triggerSpeechBubble(e) {
@@ -1248,4 +1207,47 @@ initEngine()
   })
   .catch(() => {
     statusEl.textContent = 'Stockfish unavailable — check the generated engine files.';
+  });
+
+document.addEventListener('DOMContentLoaded', () => {
+  const board = document.querySelector('.board');
+  if (!board) return;
+
+  // 1. Separate Dictionaries for White (Yours) and Black (Theirs)
+  const piecePhrases = {
+    white: {
+      'king': "I'm the King! Protect me at all costs!",
+      'queen': "I'm the Queen. I rule this board.",
+      'rook': "Rook. Holding the line.",
+      'bishop': "Bishop. Slicing through the light and dark.",
+      'knight': "Knight! *Nei-ei-eigh*",
+      'pawn': "Pawn, marching forward!",
+      'default': "I am ready to fight for!"
+    },
+    black: {
+      'king': "I am the King. You cannot defeat me.",
+      'queen': "Queen. Fear my wrath.",
+      'rook': "Rook. An unstoppable force.",
+      'bishop': "Bishop. Watching from the shadows.",
+      'knight': "Knight. The shadows move with me.",
+      'pawn': "Pawn. We are legion.",
+      'default': "The forces are ready!"
+    }
+  };
+
+  // Variable to track time between clicks for double-tap logic
+  let lastTapTime = 0;
+
+  // 2. Listen for clicks, but calculate if it's a double tap/click
+  board.addEventListener('click', (e) => {
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTapTime;
+
+    // If the time between clicks is less than 400ms, it's a double-click/tap!
+    if (tapLength > 0 && tapLength < 400) {
+      triggerSpeechBubble(e);
+      lastTapTime = 0; // Reset so a third rapid click doesn't trigger it again
+    } else {
+      lastTapTime = currentTime;
+    }
   });
