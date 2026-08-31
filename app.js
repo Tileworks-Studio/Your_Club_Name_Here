@@ -21,111 +21,55 @@ const CONFIG = {
   defeatedHoldMs: 700,
 };
 
+// ==========================================
+// SPEECH BUBBLE LOGIC INTEGRATION
+// ==========================================
+let activeBubble = null;
 
-
-  // 3. The function that actually creates the bubble
-  function triggerSpeechBubble(e) {
-    const square = e.target.closest('.square');
-    if (!square) return;
-
-    const piece = square.querySelector('.piece');
-    if (!piece) return; // Ignore empty squares
-
-    // Clear any existing bubbles on the board to prevent spam
-    document.querySelectorAll('.speech-bubble').forEach(b => b.remove());
-
-    // Combine className and src so we have all data to figure out what piece this is
-    const pieceData = (piece.className + ' ' + (piece.src || '')).toLowerCase(); 
-
-    // --- FIGURE OUT THE COLOR ---
-    // If the class or image name has "black", or starts with 'b' (like bK, bP)
-    let color = 'white'; 
-    if (pieceData.includes('black') || pieceData.match(/\bb[kqrbnp]/)) {
-      color = 'black';
-    }
-
-    // --- FIGURE OUT THE PIECE TYPE ---
-    let type = 'default';
-    const pieceTypes = ['king', 'queen', 'rook', 'bishop', 'knight', 'pawn'];
-    for (const t of pieceTypes) {
-      if (pieceData.includes(t)) {
-        type = t;
-        break;
-      }
-    }
-
-    // Fallback: If it uses single letters (like 'q' for queen or 'k' for king)
-    if (type === 'default') {
-      if (pieceData.match(/\b[bw]?k\b/)) type = 'king';
-      else if (pieceData.match(/\b[bw]?q\b/)) type = 'queen';
-      else if (pieceData.match(/\b[bw]?r\b/)) type = 'rook';
-      else if (pieceData.match(/\b[bw]?b\b/)) type = 'bishop';
-      else if (pieceData.match(/\b[bw]?n\b/)) type = 'knight'; // 'n' is knight in chess notation
-      else if (pieceData.match(/\b[bw]?p\b/)) type = 'pawn';
-    }
-
-    // Get the right phrase for the color and piece type
-    const phrase = piecePhrases[color][type];
-
-    // Create and inject the bubble
-    const bubble = document.createElement('div');
-    bubble.className = 'speech-bubble';
-    bubble.innerText = phrase;
-    
-    square.appendChild(bubble);
-
-    // Remove the bubble smoothly after 2.5 seconds
-    setTimeout(() => {
-      bubble.classList.add('fade-out');
-      setTimeout(() => bubble.remove(), 300);
-    }, 2500);
+const PIECE_PHRASES = {
+  w: {
+    p: "I'm just a Pawn... for now.",
+    n: "I'm a Knight! *gallops in an L-shape*",
+    b: "I'm a Bishop. Diagonals are my thing.",
+    r: "I'm a Rook. Straight lines only.",
+    q: "I'm the Queen. I do what I want.",
+    k: "I'm the King! Protect me!"
+  },
+  b: {
+    p: "I'm just a Pawn... for now.",
+    n: "I'm a Knight! *gallops in an L-shape*",
+    b: "I'm a Bishop. Diagonals are my thing.",
+    r: "I'm a Rook. Straight lines only.",
+    q: "I'm the Queen. I do what I want.",
+    k: "I'm the King! Protect me!"
   }
-});
+};
 
-  // Listen for clicks on the board
-  board.addEventListener('click', (e) => {
-    // Find if a piece or its square was clicked
-    const square = e.target.closest('.square');
-    if (!square) return;
+function showBubble(square, piece) {
+  if (activeBubble) clearTimeout(activeBubble.timeout);
+  activeBubble = {
+    square,
+    phrase: PIECE_PHRASES[piece.color]?.[piece.type] || "I'm a chess piece!",
+    fading: false,
+    timeout: setTimeout(() => {
+      activeBubble.fading = true;
+      renderBoard(); // Re-render triggers the fade out animation class
+      activeBubble.timeout = setTimeout(() => {
+        activeBubble = null;
+        renderBoard();
+      }, 300); // 300ms matches the fade-out CSS animation duration
+    }, 2000)
+  };
+}
 
-    const piece = square.querySelector('.piece');
-    if (!piece) return; // Ignore empty squares
+function clearBubble() {
+  if (activeBubble) {
+    clearTimeout(activeBubble.timeout);
+    activeBubble = null;
+  }
+}
+// ==========================================
 
-    // 1. Clear any existing bubbles on the board to prevent spam
-    document.querySelectorAll('.speech-bubble').forEach(b => b.remove());
-
-    // 2. Identify the piece. 
-    // EDIT THIS LINE: Change how you identify pieces based on your HTML.
-    // Example 1: If your HTML is <img class="piece pawn" src="...">
-    const pieceType = piece.className.toLowerCase(); 
-    
-    // Example 2: If your HTML is <img src="white-queen.svg">
-    // const pieceType = piece.src.toLowerCase();
-
-    // 3. Match the piece type to our phrases
-    let phrase = piecePhrases['default'];
-    for (const key in piecePhrases) {
-      if (pieceType.includes(key)) {
-        phrase = piecePhrases[key];
-        break;
-      }
-    }
-
-    // 4. Create and inject the bubble
-    const bubble = document.createElement('div');
-    bubble.className = 'speech-bubble';
-    bubble.innerText = phrase;
-    
-    square.appendChild(bubble);
-
-    // 5. Remove the bubble smoothly after 2 seconds
-    setTimeout(() => {
-      bubble.classList.add('fade-out');
-      // Wait for the fade-out animation to finish before removing from DOM
-      setTimeout(() => bubble.remove(), 300);
-    }, 2000);
-  });
-});
 const boardEl = document.querySelector('#board');
 const statusEl = document.querySelector('#statusText');
 const moveListEl = document.querySelector('#moveList');
@@ -330,6 +274,14 @@ function renderBoard() {
       cell.appendChild(createPieceImage(piece, desiredState(square, piece)));
     }
 
+    // Attach active speech bubble to the correct square during the render cycle
+    if (activeBubble && activeBubble.square === square) {
+      const bubble = document.createElement('div');
+      bubble.className = `speech-bubble ${activeBubble.fading ? 'fade-out' : ''}`;
+      bubble.innerText = activeBubble.phrase;
+      cell.appendChild(bubble);
+    }
+
     cell.addEventListener('click', () => onSquareClick(square));
     grid.appendChild(cell);
   }
@@ -413,12 +365,19 @@ function onSquareClick(square) {
 
   const clickedPiece = chess.get(square);
 
+  // Trigger or clear the speech bubble based on user click
+  if (clickedPiece) {
+    showBubble(square, clickedPiece);
+  } else {
+    clearBubble();
+  }
+
   if (!selectedSquare) {
     if (clickedPiece?.color === playerColor) {
       selectedSquare = square;
       legalTargets = getLegalTargets(square);
-      renderBoard();
     }
+    renderBoard(); // Ensure re-render always happens so the newly added bubble renders
     return;
   }
 
@@ -437,8 +396,11 @@ function onSquareClick(square) {
     if (clickedPiece?.color === playerColor) {
       selectedSquare = square;
       legalTargets = getLegalTargets(square);
-      renderBoard();
+    } else {
+      selectedSquare = null;
+      legalTargets = [];
     }
+    renderBoard(); 
     return;
   }
 
@@ -498,6 +460,7 @@ function showCheckmateResult(winnerColor) {
 
 function resetVisualState() {
   clearVisualTimers();
+  clearBubble(); // Clear lingering bubbles on reset
   visualGeneration += 1;
 
   lastMoveState.from = null;
@@ -532,6 +495,7 @@ function prepareMoveVisual(from, to, capturedPiece, capturedSquare) {
 }
 
 function makeMove(from, to, promotion, source) {
+  clearBubble(); // Ensure pieces don't speak mid-move
   if (gameOver) return false;
 
   const movingPiece = chess.get(from);
@@ -567,8 +531,6 @@ function makeMove(from, to, promotion, source) {
   selectedSquare = null;
   legalTargets = [];
 
-  // State overrides are square-based API hooks. Clear moved/captured squares so
-  // an old state cannot accidentally transfer to a different piece later.
   stateOverrides.delete(from);
   stateOverrides.delete(to);
   if (capturedSquare) stateOverrides.delete(capturedSquare);
@@ -584,9 +546,6 @@ function makeMove(from, to, promotion, source) {
   }
 
   if (isTerminalPosition()) {
-    // Checkmate is terminal, but the transient winner/loser animations still
-    // complete independently. The defeated king disappears after the full
-    // defeated animation plus the requested 0.7 second hold.
     if (lastMoveState.defeatedSquare) {
       scheduleDefeatedRemoval(
         generation,
@@ -735,8 +694,6 @@ function undo() {
   closePromotion();
   gameOver = false;
 
-  // In player-vs-engine mode, undo the last engine move plus the player's
-  // preceding move whenever possible, returning control to the player.
   const undone = chess.undo();
   if (!undone) return;
 
@@ -781,7 +738,6 @@ async function copyFen() {
       return;
     }
   } catch {
-    // Fall through to legacy copy.
   }
 
   const helper = document.createElement('textarea');
@@ -924,7 +880,6 @@ function resetEngineWorker() {
     try {
       engine.terminate();
     } catch {
-      // Ignore worker termination failures.
     }
   }
 
@@ -941,13 +896,10 @@ async function initEngine() {
   if (engine && engineReady) return;
   if (engineInitPromise) return engineInitPromise;
 
-  // A previous worker can exist after an error; recreate it instead of
-  // returning a permanently rejected/broken worker promise.
   if (engine && !engineReady) {
     try {
       engine.terminate();
     } catch {
-      // Ignore.
     }
     engine = null;
   }
@@ -1000,7 +952,6 @@ function stopEngine() {
     try {
       engine.postMessage('stop');
     } catch {
-      // Ignore.
     }
   }
 }
@@ -1049,8 +1000,6 @@ function onEngineLine(line) {
     promotion: best.length >= 5 ? best.slice(4, 5) : undefined,
   };
 
-  // If the randomized delay has already elapsed, release the move now.
-  // Otherwise requestEngineMove() will release it when its delay completes.
   if (engineDelayTimer === null && pendingEngineMove.token === engineSearchToken) {
     const move = pendingEngineMove;
     pendingEngineMove = null;
@@ -1091,8 +1040,6 @@ async function requestEngineMove() {
 
   if (!engine || !engineReady || gameOver || chess.turn() === playerColor) return;
 
-  // Choose one of ten possible delays every turn. The delay is measured from
-  // the moment the AI turn starts, so the response time varies throughout the game.
   const delayMs = randomAiThinkingDelay();
   const token = ++engineSearchToken;
   activeSearchToken = null;
@@ -1101,9 +1048,6 @@ async function requestEngineMove() {
   statusEl.textContent = 'Stockfish is thinking…';
   syncUi();
 
-  // Start Stockfish immediately so the actual calculation happens during the
-  // visible thinking period. If it finishes early, the move is held until the
-  // randomized 3–5 second response time has elapsed.
   try {
     engine.postMessage('stop');
     engine.postMessage('isready');
@@ -1147,8 +1091,6 @@ async function requestEngineMove() {
         syncUi();
       }
     } else {
-      // Stockfish may still be calculating. Keep engineBusy true; the
-      // bestmove handler will release it as soon as the result arrives.
       statusEl.textContent = 'Stockfish is thinking…';
     }
   } catch (error) {
@@ -1208,67 +1150,3 @@ initEngine()
   .catch(() => {
     statusEl.textContent = 'Stockfish unavailable — check the generated engine files.';
   });
-
-
-
-document.addEventListener('DOMContentLoaded', () => {
-  const board = document.querySelector('.board');
-  if (!board) return;
-
-  // A dictionary of fun phrases based on the piece type.
-  // You will need to adjust the keys (e.g., 'queen', 'pawn') to match 
-  // whatever class name, data-attribute, or image source your game uses.
-  const piecePhrases = {
-    'king': "I'm the King! Protect me!",
-    'queen': "I'm the Queen. I do what I want.",
-    'rook': "I'm a Rook. Straight lines only.",
-    'bishop': "I'm a Bishop. Diagonals are my thing.",
-    'knight': "I'm a Knight! *gallops in an L-shape*",
-    'pawn': "I'm just a Pawn... for now.",
-    'default': "I'm a chess piece!"
-  };
-
-  // Listen for clicks on the board
-  board.addEventListener('click', (e) => {
-    // Find if a piece or its square was clicked
-    const square = e.target.closest('.square');
-    if (!square) return;
-
-    const piece = square.querySelector('.piece');
-    if (!piece) return; // Ignore empty squares
-
-    // 1. Clear any existing bubbles on the board to prevent spam
-    document.querySelectorAll('.speech-bubble').forEach(b => b.remove());
-
-    // 2. Identify the piece. 
-    // EDIT THIS LINE: Change how you identify pieces based on your HTML.
-    // Example 1: If your HTML is <img class="piece pawn" src="...">
-    const pieceType = piece.className.toLowerCase(); 
-    
-    // Example 2: If your HTML is <img src="white-queen.svg">
-    // const pieceType = piece.src.toLowerCase();
-
-    // 3. Match the piece type to our phrases
-    let phrase = piecePhrases['default'];
-    for (const key in piecePhrases) {
-      if (pieceType.includes(key)) {
-        phrase = piecePhrases[key];
-        break;
-      }
-    }
-
-    // 4. Create and inject the bubble
-    const bubble = document.createElement('div');
-    bubble.className = 'speech-bubble';
-    bubble.innerText = phrase;
-    
-    square.appendChild(bubble);
-
-    // 5. Remove the bubble smoothly after 2 seconds
-    setTimeout(() => {
-      bubble.classList.add('fade-out');
-      // Wait for the fade-out animation to finish before removing from DOM
-      setTimeout(() => bubble.remove(), 300);
-    }, 2000);
-  });
-});
