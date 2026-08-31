@@ -21,6 +21,67 @@ const CONFIG = {
   defeatedHoldMs: 700,
 };
 
+document.addEventListener('DOMContentLoaded', () => {
+  const board = document.querySelector('.board');
+  if (!board) return;
+
+  // A dictionary of fun phrases based on the piece type.
+  // You will need to adjust the keys (e.g., 'queen', 'pawn') to match 
+  // whatever class name, data-attribute, or image source your game uses.
+  const piecePhrases = {
+    'king': "I'm the King! Protect me!",
+    'queen': "I'm the Queen. I do what I want.",
+    'rook': "I'm a Rook. Straight lines only.",
+    'bishop': "I'm a Bishop. Diagonals are my thing.",
+    'knight': "I'm a Knight! *gallops in an L-shape*",
+    'pawn': "I'm just a Pawn... for now.",
+    'default': "I'm a chess piece!"
+  };
+
+  // Listen for clicks on the board
+  board.addEventListener('click', (e) => {
+    // Find if a piece or its square was clicked
+    const square = e.target.closest('.square');
+    if (!square) return;
+
+    const piece = square.querySelector('.piece');
+    if (!piece) return; // Ignore empty squares
+
+    // 1. Clear any existing bubbles on the board to prevent spam
+    document.querySelectorAll('.speech-bubble').forEach(b => b.remove());
+
+    // 2. Identify the piece. 
+    // EDIT THIS LINE: Change how you identify pieces based on your HTML.
+    // Example 1: If your HTML is <img class="piece pawn" src="...">
+    const pieceType = piece.className.toLowerCase(); 
+    
+    // Example 2: If your HTML is <img src="white-queen.svg">
+    // const pieceType = piece.src.toLowerCase();
+
+    // 3. Match the piece type to our phrases
+    let phrase = piecePhrases['default'];
+    for (const key in piecePhrases) {
+      if (pieceType.includes(key)) {
+        phrase = piecePhrases[key];
+        break;
+      }
+    }
+
+    // 4. Create and inject the bubble
+    const bubble = document.createElement('div');
+    bubble.className = 'speech-bubble';
+    bubble.innerText = phrase;
+    
+    square.appendChild(bubble);
+
+    // 5. Remove the bubble smoothly after 2 seconds
+    setTimeout(() => {
+      bubble.classList.add('fade-out');
+      // Wait for the fade-out animation to finish before removing from DOM
+      setTimeout(() => bubble.remove(), 300);
+    }, 2000);
+  });
+});
 const boardEl = document.querySelector('#board');
 const statusEl = document.querySelector('#statusText');
 const moveListEl = document.querySelector('#moveList');
