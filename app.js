@@ -28,20 +28,20 @@ let activeBubble = null;
 
 const PIECE_PHRASES = {
   w: {
-    p: "I'm just a Pawn... for now.",
-    n: "I'm a Knight! *gallops in an L-shape*",
-    b: "I'm a Bishop. Diagonals are my thing.",
-    r: "I'm a Rook. Straight lines only.",
-    q: "I'm the Queen. I do what I want.",
-    k: "I'm the King! Protect me!"
+    p: "Pawn. Your Custom Text Here.",
+    n: "Knight. Your Custom Text Here.",
+    b: "Bishop. Your Custom Text Here.",
+    r: "Rook. Your Custom Text Here.",
+    q: "Queen. Your Custom Text Here.",
+    k: "King. Your Custom Text Here.",
   },
   b: {
-    p: "Pawn. We are legion.",
-    n: "Knight. The shadows move with me.",
-    b: "Bishop. Watching from the shadows.",
-    r: "Rook. An unstoppable force.",
-    q: "Queen. Fear my wrath.",
-    k: "I am the King. You cannot defeat me.",
+    p: "Pawn. Your Custom Text Here.",
+    n: "Knight. Your Custom Text Here.",
+    b: "Bishop. Your Custom Text Here.",
+    r: "Rook. Your Custom Text Here.",
+    q: "Queen. Your Custom Text Here.",
+    k: "King. Your Custom Text Here.",
   }
 };
 
