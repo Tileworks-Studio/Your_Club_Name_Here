@@ -312,7 +312,7 @@ button, select, textarea { font: inherit; }
   transition: none !important;
 }
 
-.piece.state-moving { animation: pieceMoving 1.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.piece.state-moving { animation: pieceMoving 0.40s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .piece.state-attacking { animation: pieceAttacking 0.75s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
 .piece.state-celebrate { animation: pieceCelebrate 5.00s ease-in-out both; }
 .piece.state-defeated { animation: pieceDefeated 1.65s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
