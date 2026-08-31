@@ -36,12 +36,12 @@ const PIECE_PHRASES = {
     k: "I'm the King! Protect me!"
   },
   b: {
-    p: "I'm just a Pawn... for now.",
-    n: "I'm a Knight! *gallops in an L-shape*",
-    b: "I'm a Bishop. Diagonals are my thing.",
-    r: "I'm a Rook. Straight lines only.",
-    q: "I'm the Queen. I do what I want.",
-    k: "I'm the King! Protect me!"
+    p: "Pawn. We are legion.",
+    n: "Knight. The shadows move with me.",
+    b: "Bishop. Watching from the shadows.",
+    r: "Rook. An unstoppable force.",
+    q: "Queen. Fear my wrath.",
+    k: "I am the King. You cannot defeat me.",
   }
 };
 
