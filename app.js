@@ -25,18 +25,103 @@ document.addEventListener('DOMContentLoaded', () => {
   const board = document.querySelector('.board');
   if (!board) return;
 
-  // A dictionary of fun phrases based on the piece type.
-  // You will need to adjust the keys (e.g., 'queen', 'pawn') to match 
-  // whatever class name, data-attribute, or image source your game uses.
+  // 1. Separate Dictionaries for White (Yours) and Black (Theirs)
   const piecePhrases = {
-    'king': "I'm the King! Protect me!",
-    'queen': "I'm the Queen. I do what I want.",
-    'rook': "I'm a Rook. Straight lines only.",
-    'bishop': "I'm a Bishop. Diagonals are my thing.",
-    'knight': "I'm a Knight! *gallops in an L-shape*",
-    'pawn': "I'm just a Pawn... for now.",
-    'default': "I'm a chess piece!"
+    white: {
+      'king': "I'm the King! Protect me at all costs!",
+      'queen': "I'm the Queen. I rule this board.",
+      'rook': "Rook. Holding the line.",
+      'bishop': "Bishop. Slicing through the light and dark.",
+      'knight': "Knight! *Nei-ei-eigh*",
+      'pawn': "Pawn, marching forward!",
+      'default': "I am ready to fight for!"
+    },
+    black: {
+      'king': "I am the King. You cannot defeat me.",
+      'queen': "Queen. Fear my wrath.",
+      'rook': "Rook. An unstoppable force.",
+      'bishop': "Bishop. Watching from the shadows.",
+      'knight': "Knight. The shadows move with me.",
+      'pawn': "Pawn. We are legion.",
+      'default': "The forces are ready!"
+    }
   };
+
+  // Variable to track time between clicks for double-tap logic
+  let lastTapTime = 0;
+
+  // 2. Listen for clicks, but calculate if it's a double tap/click
+  board.addEventListener('click', (e) => {
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTapTime;
+
+    // If the time between clicks is less than 400ms, it's a double-click/tap!
+    if (tapLength > 0 && tapLength < 400) {
+      triggerSpeechBubble(e);
+      lastTapTime = 0; // Reset so a third rapid click doesn't trigger it again
+    } else {
+      lastTapTime = currentTime;
+    }
+  });
+
+  // 3. The function that actually creates the bubble
+  function triggerSpeechBubble(e) {
+    const square = e.target.closest('.square');
+    if (!square) return;
+
+    const piece = square.querySelector('.piece');
+    if (!piece) return; // Ignore empty squares
+
+    // Clear any existing bubbles on the board to prevent spam
+    document.querySelectorAll('.speech-bubble').forEach(b => b.remove());
+
+    // Combine className and src so we have all data to figure out what piece this is
+    const pieceData = (piece.className + ' ' + (piece.src || '')).toLowerCase(); 
+
+    // --- FIGURE OUT THE COLOR ---
+    // If the class or image name has "black", or starts with 'b' (like bK, bP)
+    let color = 'white'; 
+    if (pieceData.includes('black') || pieceData.match(/\bb[kqrbnp]/)) {
+      color = 'black';
+    }
+
+    // --- FIGURE OUT THE PIECE TYPE ---
+    let type = 'default';
+    const pieceTypes = ['king', 'queen', 'rook', 'bishop', 'knight', 'pawn'];
+    for (const t of pieceTypes) {
+      if (pieceData.includes(t)) {
+        type = t;
+        break;
+      }
+    }
+
+    // Fallback: If it uses single letters (like 'q' for queen or 'k' for king)
+    if (type === 'default') {
+      if (pieceData.match(/\b[bw]?k\b/)) type = 'king';
+      else if (pieceData.match(/\b[bw]?q\b/)) type = 'queen';
+      else if (pieceData.match(/\b[bw]?r\b/)) type = 'rook';
+      else if (pieceData.match(/\b[bw]?b\b/)) type = 'bishop';
+      else if (pieceData.match(/\b[bw]?n\b/)) type = 'knight'; // 'n' is knight in chess notation
+      else if (pieceData.match(/\b[bw]?p\b/)) type = 'pawn';
+    }
+
+    // Get the right phrase for the color and piece type
+    const phrase = piecePhrases[color][type];
+
+    // Create and inject the bubble
+    const bubble = document.createElement('div');
+    bubble.className = 'speech-bubble';
+    bubble.innerText = phrase;
+    
+    square.appendChild(bubble);
+
+    // Remove the bubble smoothly after 2.5 seconds
+    setTimeout(() => {
+      bubble.classList.add('fade-out');
+      setTimeout(() => bubble.remove(), 300);
+    }, 2500);
+  }
+});
 
   // Listen for clicks on the board
   board.addEventListener('click', (e) => {
